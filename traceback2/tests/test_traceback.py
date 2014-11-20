@@ -13,7 +13,7 @@ try:
 except ImportError:
 # support raise_from on 3.x:
 # submitted to six: https://bitbucket.org/gutworth/six/issue/102/raise-foo-from-bar-is-a-syntax-error-on-27
-    if sys.version_info[:2] > (3, 2):
+    if sys.version_info[:2] > (3, 1):
         six.exec_("""def raise_from(value, from_value):
         raise value from from_value
     """)
@@ -110,6 +110,8 @@ class SyntaxTracebackCases(unittest.TestCase):
         self.assertEqual(lst, ['KeyboardInterrupt\n'])
 
     def test_format_exception_only_bad__str__(self):
+        def qualname(X):
+            return getattr(X, '__qualname__', X.__name__)
         class X(Exception):
             def __str__(self):
                 1/0
@@ -117,9 +119,9 @@ class SyntaxTracebackCases(unittest.TestCase):
         self.assertEqual(len(err), 1)
         str_value = '<unprintable %s object>' % X.__name__
         if X.__module__ in ('__main__', 'builtins'):
-            str_name = X.__qualname__
+            str_name = qualname(X)
         else:
-            str_name = '.'.join([X.__module__, X.__qualname__])
+            str_name = '.'.join([X.__module__, qualname(X)])
         self.assertEqual(err[0], "%s: %s\n" % (str_name, str_value))
 
     def test_without_exception(self):
@@ -345,6 +347,7 @@ class BaseExceptionReportingTests:
         self.check_zero_div(blocks[0])
         self.assertIn('inner_raise() # Marker', blocks[2])
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 3), "Only applies to 3.3+")
     def test_context_suppression(self):
         try:
             try:

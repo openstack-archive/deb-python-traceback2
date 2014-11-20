@@ -128,7 +128,7 @@ def _iter_chain(exc, custom_tb=None, seen=None):
         its.append(_iter_chain(cause, False, seen))
         its.append([(_cause_message, None)])
     elif (context is not None and
-          not exc.__suppress_context__ and
+          not getattr(exc, '__suppress_context__', None) and
           context not in seen):
         its.append(_iter_chain(context, None, seen))
         its.append([(_context_message, None)])
