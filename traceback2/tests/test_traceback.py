@@ -22,7 +22,7 @@ except ImportError:
             raise value
 import unittest2 as unittest
 import testtools
-from testtools.matchers import DocTestMatches
+from testtools.matchers import DocTestMatches, Equals, MatchesAny
 
 import traceback2 as traceback
 
@@ -35,7 +35,7 @@ def captured_output(streamname):
         yield stream
 
 
-class SyntaxTracebackCases(unittest.TestCase):
+class SyntaxTracebackCases(testtools.TestCase):
     # For now, a very minimal set of tests.  I want to be sure that
     # formatting of SyntaxErrors works based on changes for 2.1.
 
@@ -107,7 +107,9 @@ class SyntaxTracebackCases(unittest.TestCase):
         # Test that exceptions derived from BaseException are formatted right
         e = KeyboardInterrupt()
         lst = traceback.format_exception_only(e.__class__, e)
-        self.assertEqual(lst, ['KeyboardInterrupt\n'])
+        self.assertThat(lst,
+            MatchesAny(Equals(['KeyboardInterrupt\n']),
+                       Equals(['exceptions.KeyboardInterrupt\n'])))
 
     def test_format_exception_only_bad__str__(self):
         def qualname(X):
@@ -317,7 +319,8 @@ class BaseExceptionReportingTests:
         self.assertTrue(lines[0].startswith('Traceback'))
         self.assertTrue(lines[1].startswith('  File'))
         self.assertIn('1/0 # Marker', lines[2])
-        self.assertTrue(lines[3].startswith('ZeroDivisionError'))
+        # < 3 show as exceptions.ZeroDivisionError.
+        self.assertIn('ZeroDivisionError', lines[3])
 
     def test_cause(self):
         def inner_raise():
