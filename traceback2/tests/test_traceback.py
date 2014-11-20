@@ -191,7 +191,9 @@ class SyntaxTracebackCases(unittest.TestCase):
             do_test(" \t\f\n# coding: {0}\n".format(charset),
                     text, charset, 5)
         # Issue #18960: coding spec should has no effect
-        do_test("0\n# coding: GBK\n", "h\xe9 ho", 'utf-8', 5)
+        # (Fixed in 3.4)
+        if sys.version_info[:2] > (3, 3):
+            do_test("0\n# coding: GBK\n", "h\xe9 ho", 'utf-8', 5)
 
 
 class TracebackFormatTests(unittest.TestCase):
@@ -457,5 +459,6 @@ class MiscTracebackCases(unittest.TestCase):
         # Clear traceback frames
         traceback.clear_frames(tb)
 
-        # Local variable dict should now be empty.
-        self.assertEqual(len(inner_frame.f_locals), 0)
+        # Local variable dict should now be empty (on Python 3.4+)
+        if sys.version_info[:2] > (3, 3):
+            self.assertEqual({}, inner_frame.f_locals)
