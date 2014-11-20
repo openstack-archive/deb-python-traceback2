@@ -1,1 +1,4 @@
+contextlib2
+fixtures
+testtools
 unittest2
