@@ -292,13 +292,13 @@ boundaries = re.compile(
 
 class BaseExceptionReportingTests:
 
-    def get_exception(self, exception_or_callable):
+    def get_exception(self, exception_or_callable, tb=None):
         if isinstance(exception_or_callable, Exception):
-            return exception_or_callable
+            return exception_or_callable, tb
         try:
             exception_or_callable()
         except Exception as e:
-            return e
+            return e, sys.exc_info()[2]
 
     def zero_div(self):
         1/0 # In zero_div
@@ -314,7 +314,8 @@ class BaseExceptionReportingTests:
             1/0 # Marker
         except ZeroDivisionError as _:
             e = _
-        lines = self.get_report(e).splitlines()
+        tb = sys.exc_info()[2]
+        lines = self.get_report(e, tb=tb).splitlines()
         self.assertEqual(len(lines), 4)
         self.assertTrue(lines[0].startswith('Traceback'))
         self.assertTrue(lines[1].startswith('  File'))
@@ -429,12 +430,12 @@ class PyExcReportingTests(BaseExceptionReportingTests, testtools.TestCase):
     # format_exception() and print_exception().
     #
 
-    def get_report(self, e):
-        e = self.get_exception(e)
+    def get_report(self, e, tb=None):
+        e, tb = self.get_exception(e, tb)
         s = ''.join(
-            traceback.format_exception(type(e), e, e.__traceback__))
+            traceback.format_exception(type(e), e, tb))
         with captured_output("stderr") as sio:
-            traceback.print_exception(type(e), e, e.__traceback__)
+            traceback.print_exception(type(e), e, tb)
         self.assertEqual(sio.getvalue(), s)
         return s
 
