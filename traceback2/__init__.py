@@ -122,8 +122,8 @@ def _iter_chain(exc, custom_tb=None, seen=None):
         seen = set()
     seen.add(exc)
     its = []
-    context = exc.__context__
-    cause = exc.__cause__
+    context = getattr(exc, '__context__', None)
+    cause = getattr(exc, '__cause__', None)
     if cause is not None and cause not in seen:
         its.append(_iter_chain(cause, False, seen))
         its.append([(_cause_message, None)])
