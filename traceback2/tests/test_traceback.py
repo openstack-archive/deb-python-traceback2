@@ -1,6 +1,7 @@
 """Test cases for traceback module"""
 
 import doctest
+import io
 from io import StringIO
 import sys
 import re
@@ -8,6 +9,7 @@ import re
 import contextlib2 as contextlib
 import fixtures
 import six
+from six import text_type, u
 try:
     from six import raise_from
 except ImportError:
@@ -144,21 +146,23 @@ class SyntaxTracebackCases(testtools.TestCase):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
         stdout, stderr = process.communicate()
-        output_encoding = str(stdout, 'ascii').splitlines()[0]
+        output_encoding = text_type(stdout, 'ascii').splitlines()[0]
 
-        def do_test(firstlines, message, charset, lineno):
+        def do_test(firstlines, message, charset, lineno, output_encoding):
             # Raise the message in a subprocess, and catch the output
             with fixtures.TempDir() as d:
                 TESTFN = d.path + '/fname'
-                output = open(TESTFN, "w", encoding=charset)
-                output.write("""{0}if 1:
+                output = io.open(TESTFN, "w", encoding=charset)
+                output.write(u("""{0}if 1:
                     import traceback;
                     raise RuntimeError('{1}')
-                    """.format(firstlines, message))
+                    """).format(firstlines, message))
                 output.close()
                 process = subprocess.Popen([sys.executable, TESTFN],
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 stdout, stderr = process.communicate()
+                if output_encoding == 'None':
+                    output_encoding = charset
                 stdout = stdout.decode(output_encoding).splitlines()
 
             # The source lines are encoded with the 'backslashreplace' handler
@@ -167,8 +171,8 @@ class SyntaxTracebackCases(testtools.TestCase):
             # and we just decoded them with the output_encoding.
             message_ascii = encoded_message.decode(output_encoding)
 
-            err_line = "raise RuntimeError('{0}')".format(message_ascii)
-            err_msg = "RuntimeError: {0}".format(message_ascii)
+            err_line = u("raise RuntimeError('{0}')").format(message_ascii)
+            err_msg = u("RuntimeError: {0}").format(message_ascii)
 
             self.assertIn(("line %s" % lineno), stdout[1],
                 "Invalid line number: {0!r} instead of {1}".format(
@@ -180,24 +184,26 @@ class SyntaxTracebackCases(testtools.TestCase):
                 "Invalid error message: {0!r} instead of {1!r}".format(
                     stdout[3], err_msg))
 
-        do_test("", "foo", "ascii", 3)
+        do_test("", "foo", "ascii", 3, output_encoding)
         for charset in ("ascii", "iso-8859-1", "utf-8", "GBK"):
             if charset == "ascii":
-                text = "foo"
+                text = u("foo")
             elif charset == "GBK":
-                text = "\u4E02\u5100"
+                text = u("\u4E02\u5100")
             else:
-                text = "h\xe9 ho"
+                text = u("h\xe9 ho")
             do_test("# coding: {0}\n".format(charset),
-                    text, charset, 4)
+                    text, charset, 4, output_encoding)
             do_test("#!shebang\n# coding: {0}\n".format(charset),
-                    text, charset, 5)
+                    text, charset, 5, output_encoding)
             do_test(" \t\f\n# coding: {0}\n".format(charset),
-                    text, charset, 5)
+                    text, charset, 5, output_encoding)
         # Issue #18960: coding spec should has no effect
         # (Fixed in 3.4)
         if sys.version_info[:2] > (3, 3):
-            do_test("0\n# coding: GBK\n", "h\xe9 ho", 'utf-8', 5)
+            do_test(
+                "0\n# coding: GBK\n", u("h\xe9 ho"), 'utf-8', 5,
+                output_encoding)
 
 
 class TracebackFormatTests(unittest.TestCase):
@@ -207,6 +213,14 @@ class TracebackFormatTests(unittest.TestCase):
 
     def check_traceback_format(self, cleanup_func=None):
         try:
+            if issubclass(six.binary_type, six.string_types):
+                # Python 2.6 or other platform where the interpreter 
+                # is likely going to be spitting out bytes, which will
+                # then fail with io.StringIO(), so we skip the cross-
+                # checks with the C API there. Note that _testcapi
+                # is included in (at least) Ubuntu CPython packages, which
+                # makes the import check less effective than desired.
+                raise ImportError
             from _testcapi import traceback_print
         except ImportError:
             traceback_print = None
@@ -217,8 +231,8 @@ class TracebackFormatTests(unittest.TestCase):
             if cleanup_func is not None:
                 # Clear the inner frames, not this one
                 cleanup_func(tb.tb_next)
-            traceback_fmt = 'Traceback (most recent call last):\n' + \
-                            ''.join(traceback.format_tb(tb))
+            traceback_fmt = u('Traceback (most recent call last):\n') + \
+                            u('').join(traceback.format_tb(tb))
             if traceback_print is not None:
                 file_ = StringIO()
                 traceback_print(tb, file_)
@@ -323,6 +337,7 @@ class BaseExceptionReportingTests:
         # < 3 show as exceptions.ZeroDivisionError.
         self.assertIn('ZeroDivisionError', lines[3])
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 2), "Only applies to 3.2+")
     def test_cause(self):
         def inner_raise():
             try:
@@ -337,6 +352,7 @@ class BaseExceptionReportingTests:
         self.check_zero_div(blocks[0])
         self.assertIn('inner_raise() # Marker', blocks[2])
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 2), "Only applies to 3.2+")
     def test_context(self):
         def inner_raise():
             try:
@@ -369,6 +385,7 @@ Traceback (most recent call last):
 ZeroDivisionError
 """, doctest.ELLIPSIS))
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 2), "Only applies to 3.2+")
     def test_cause_and_context(self):
         # When both a cause and a context are set, only the cause should be
         # displayed and the context should be muted.
@@ -389,6 +406,7 @@ ZeroDivisionError
         self.check_zero_div(blocks[0])
         self.assertIn('inner_raise() # Marker', blocks[2])
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 2), "Only applies to 3.2+")
     def test_cause_recursive(self):
         def inner_raise():
             try:

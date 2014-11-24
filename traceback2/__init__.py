@@ -4,6 +4,8 @@ import linecache
 import sys
 import operator
 
+from six import u
+
 __all__ = ['extract_stack', 'extract_tb', 'format_exception',
            'format_exception_only', 'format_list', 'format_stack',
            'format_tb', 'print_exc', 'format_exc', 'print_exception',
@@ -16,9 +18,9 @@ __all__ = ['extract_stack', 'extract_tb', 'format_exception',
 
 def _format_list_iter(extracted_list):
     for filename, lineno, name, line in extracted_list:
-        item = '  File "{0}", line {1}, in {2}\n'.format(filename, lineno, name)
+        item = u('  File "{0}", line {1}, in {2}\n').format(filename, lineno, name)
         if line:
-            item = item + '    {0}\n'.format(line.strip())
+            item = item + u('    {0}\n').format(line.strip())
         yield item
 
 def print_list(extracted_list, file=None):
@@ -147,10 +149,10 @@ def _format_exception_iter(etype, value, tb, limit, chain):
     for value, tb in values:
         if isinstance(value, str):
             # This is a cause/context message line
-            yield value + '\n'
+            yield value + u('\n')
             continue
         if tb:
-            yield 'Traceback (most recent call last):\n'
+            yield u('Traceback (most recent call last):\n')
             for it in _format_list_iter(_extract_tb_iter(tb, limit=limit)):
                 yield it
         for it in _format_exception_only_iter(type(value), value):
@@ -209,32 +211,32 @@ def _format_exception_only_iter(etype, value):
         return
 
     stype = getattr(etype, '__qualname__', etype.__name__)
-    smod = etype.__module__
+    smod = u(etype.__module__)
     if smod not in ("__main__", "builtins"):
-        stype = smod + '.' + stype
+        stype = smod + u('.') + stype
 
     if not issubclass(etype, SyntaxError):
         yield _format_final_exc_line(stype, value)
         return
 
     # It was a syntax error; show exactly where the problem was found.
-    filename = value.filename or "<string>"
-    lineno = str(value.lineno) or '?'
-    yield '  File "{0}", line {1}\n'.format(filename, lineno)
+    filename = value.filename or u("<string>")
+    lineno = str(value.lineno) or u('?')
+    yield u('  File "{0}", line {1}\n').format(filename, lineno)
 
     badline = value.text
     offset = value.offset
     if badline is not None:
-        yield '    {0}\n'.format(badline.strip())
+        yield u('    {0}\n').format(u(badline).strip())
         if offset is not None:
-            caretspace = badline.rstrip('\n')
+            caretspace = u(badline).rstrip('\n')
             offset = min(len(caretspace), offset) - 1
             caretspace = caretspace[:offset].lstrip()
             # non-space whitespace (likes tabs) must be kept for alignment
             caretspace = ((c.isspace() and c or ' ') for c in caretspace)
-            yield '    {0}^\n'.format(''.join(caretspace))
+            yield u('    {0}^\n'.format(''.join(caretspace)))
     msg = value.msg or "<no detail available>"
-    yield "{0}: {1}\n".format(stype, msg)
+    yield u("{0}: {1}\n").format(stype, msg)
 
 def _format_final_exc_line(etype, value):
     valuestr = _some_str(value)
