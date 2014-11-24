@@ -3,6 +3,7 @@
 import doctest
 import io
 from io import StringIO
+import platform
 import sys
 import re
 
@@ -103,7 +104,12 @@ class SyntaxTracebackCases(testtools.TestCase):
         self.assertEqual(len(err), 4)
         self.assertEqual(err[1].strip(), "print(2)")
         self.assertIn("^", err[2])
-        self.assertEqual(err[1].find("p"), err[2].find("^"))
+        # pypy has a different offset for its errors.
+        pos_cpython = err[1].find("p")
+        pos_pypy = err[1].find(")")
+        self.assertThat(
+            err[2].find("^"),
+            MatchesAny(Equals(pos_cpython), Equals(pos_pypy)))
 
     def test_base_exception(self):
         # Test that exceptions derived from BaseException are formatted right
@@ -174,6 +180,9 @@ class SyntaxTracebackCases(testtools.TestCase):
             err_line = u("raise RuntimeError('{0}')").format(message_ascii)
             err_msg = u("RuntimeError: {0}").format(message_ascii)
 
+            if platform.python_implementation() == 'PyPy':
+                # PyPy includes its own top level app_main.py in the traceback.
+                del stdout[1]
             self.assertIn(("line %s" % lineno), stdout[1],
                 "Invalid line number: {0!r} instead of {1}".format(
                     stdout[1], lineno))
