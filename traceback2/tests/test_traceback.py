@@ -619,7 +619,7 @@ class TestStack(unittest.TestCase):
                 traceback.walk_stack(None), capture_locals=True, limit=1)
         s = some_inner(3, 4)
         self.assertEqual(
-            ['  File "' + __file__ + '", line 619, '
+            ['  File "' + FNAME + '", line 619, '
              'in some_inner\n'
              '    traceback.walk_stack(None), capture_locals=True, limit=1)\n'
              '    a = 1\n'
