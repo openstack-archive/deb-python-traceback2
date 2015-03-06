@@ -2,4 +2,7 @@
 .*.sw?
 *.egg-info
 *.pyc
-.eggs
+*.egg
+ChangeLog
+/build/
+/dist/
