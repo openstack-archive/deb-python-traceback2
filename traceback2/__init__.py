@@ -164,6 +164,18 @@ def _some_str(value):
 
 # --
 
+def _some_fs_str(value):
+    """_some_str, but for filesystem paths."""
+    if value is None:
+        return None
+    try:
+        if type(value) is bytes:
+            return value.decode(sys.getfilesystemencoding())
+    except:
+        pass
+    return _some_str(value)
+
+
 def print_exc(limit=None, file=None, chain=True):
     """Shorthand for 'print_exception(*sys.exc_info(), limit, file)'."""
     print_exception(*sys.exc_info(), limit=limit, file=file, chain=chain)
@@ -380,7 +392,7 @@ class StackSummary(list):
         for frame in self:
             row = []
             row.append(u('  File "{0}", line {1}, in {2}\n').format(
-                _some_str(frame.filename), frame.lineno, frame.name))
+                _some_fs_str(frame.filename), frame.lineno, frame.name))
             if frame.line:
                 row.append(u('    {0}\n').format(frame.line.strip()))
             if frame.locals:
@@ -526,7 +538,7 @@ class TracebackException:
             return
 
         # It was a syntax error; show exactly where the problem was found.
-        filename = self.filename or u("<string>")
+        filename = _some_fs_str(self.filename) or u("<string>")
         lineno = str(self.lineno) or u('?')
         yield u('  File "{0}", line {1}\n').format(filename, lineno)
 

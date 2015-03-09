@@ -607,14 +607,26 @@ class TestStack(unittest.TestCase):
             ['  File "foo.py", line 1, in fred\n    line\n'],
             s.format())
 
+    @unittest.skipIf(sys.getfilesystemencoding()=='ANSI_X3.4-1968',
+                     'Requires non-ascii fs encoding')
+    def test_format_unicode_filename(self):
+        # Filenames in Python2 may be bytestrings that will fail to implicit
+        # decode.
+        fname = u('\u5341').encode(sys.getfilesystemencoding())
+        s = traceback.StackSummary.from_list([(fname, 1, 'fred', 'line')])
+        self.assertEqual(
+            [u('  File "\u5341", line 1, in fred\n    line\n')],
+            s.format())
+
     def test_format_bad_filename(self):
         # Filenames in Python2 may be bytestrings that will fail to implicit
         # decode.
-        # This won't decode via the implicit(ascii) codec.
-        fname = u('\u5341').encode('shift-jis')
+        # This won't decode via the implicit(ascii) codec or the default
+        # fs encoding (unless the encoding is a wildcard encoding).
+        fname = b('\x8b')
         s = traceback.StackSummary.from_list([(fname, 1, 'fred', 'line')])
         self.assertEqual(
-            ['  File "b\'\\x8f\\\\\'", line 1, in fred\n    line\n'],
+            ['  File "b\'\\x8b\'", line 1, in fred\n    line\n'],
             s.format())
 
     def test_locals(self):
@@ -639,7 +651,7 @@ class TestStack(unittest.TestCase):
                 traceback.walk_stack(None), capture_locals=True, limit=1)
         s = some_inner(3, 4)
         self.assertEqual(
-            ['  File "' + FNAME + '", line 639, '
+            ['  File "' + FNAME + '", line 651, '
              'in some_inner\n'
              '    traceback.walk_stack(None), capture_locals=True, limit=1)\n'
              '    a = 1\n'
@@ -818,6 +830,70 @@ class TestTracebackException(unittest.TestCase):
             u('  File "/foo.py", line 2, in method\n    \u5341\n'),
             u('  File "/foo.py", line 2\n'),
             u('    \u5341\n'),
+            u('    ^\n'),
+            u('SyntaxError: uh oh\n')],
+            list(exc.format()))
+
+    @unittest.skipUnless(sys.version_info[0] < 3, "Applies to 2.x only.")
+    @unittest.skipIf(sys.getfilesystemencoding()=='ANSI_X3.4-1968',
+                     'Requires non-ascii fs encoding')
+    def test_format_unicode_filename(self):
+        # Filenames in Python2 may be bytestrings that will fail to implicit
+        # decode.
+        fname = u('\u5341').encode(sys.getfilesystemencoding())
+        lines = u("1\n2\n3\n")
+        fake_module = dict(
+            __name__='fred',
+            __loader__=FakeLoader(lines)
+            )
+        linecache.updatecache(fname, fake_module)
+        e = SyntaxError("uh oh")
+        e.filename = fname
+        e.lineno = 2
+        e.text = b('something wrong')
+        e.offset = 1
+        c = test_code(fname, 'method')
+        f = test_frame(c, fake_module, {'something': 1})
+        tb = test_tb(f, 2, None)
+        exc = traceback.TracebackException(SyntaxError, e, tb)
+        list(exc.format_exception_only())
+        self.assertEqual([
+            u('Traceback (most recent call last):\n'),
+            u('  File "\u5341", line 2, in method\n    2\n'),
+            u('  File "\u5341", line 2\n'),
+            u('    something wrong\n'),
+            u('    ^\n'),
+            u('SyntaxError: uh oh\n')],
+            list(exc.format()))
+
+    @unittest.skipUnless(sys.version_info[0] < 3, "Applies to 2.x only.")
+    def test_format_bad_filename(self):
+        # Filenames in Python2 may be bytestrings that will fail to implicit
+        # decode.
+        # This won't decode via the implicit(ascii) codec or the default
+        # fs encoding (unless the encoding is a wildcard encoding).
+        fname = b('\x8b')
+        lines = u("1\n2\n3\n")
+        fake_module = dict(
+            __name__='fred',
+            __loader__=FakeLoader(lines)
+            )
+        linecache.updatecache(fname, fake_module)
+        e = SyntaxError("uh oh")
+        e.filename = fname
+        e.lineno = 2
+        e.text = b('something wrong')
+        e.offset = 1
+        c = test_code(fname, 'method')
+        f = test_frame(c, fake_module, {'something': 1})
+        tb = test_tb(f, 2, None)
+        exc = traceback.TracebackException(SyntaxError, e, tb)
+        list(exc.format_exception_only())
+        self.assertEqual([
+            u('Traceback (most recent call last):\n'),
+            b('  File "b\'\\x8b\'", line 2, in method\n    2\n').decode(),
+            b('  File "b\'\\x8b\'", line 2\n').decode(),
+            u('    something wrong\n'),
             u('    ^\n'),
             u('SyntaxError: uh oh\n')],
             list(exc.format()))
