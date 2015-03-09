@@ -4,7 +4,7 @@ import sys
 import operator
 
 import linecache2 as linecache
-from six import u
+from six import u, PY2
 
 __all__ = ['extract_stack', 'extract_tb', 'format_exception',
            'format_exception_only', 'format_list', 'format_stack',
@@ -141,14 +141,24 @@ def format_exception_only(etype, value):
 def _format_final_exc_line(etype, value):
     valuestr = _some_str(value)
     if value == 'None' or value is None or not valuestr:
-        line = "%s\n" % etype
+        line = u("%s\n") % etype
     else:
-        line = "%s: %s\n" % (etype, valuestr)
+        line = u("%s: %s\n") % (etype, valuestr)
     return line
 
 def _some_str(value):
     try:
-        return str(value)
+        if PY2:
+            # If there is a working __unicode__, great.
+            # Otherwise see if we can get a bytestring...
+            # Otherwise we fallback to unprintable.
+            try:
+                return unicode(value)
+            except:
+                return "b%s" % repr(str(value))
+        else:
+            # For Python3, bytestrings don't implicit decode, so its trivial.
+            return str(value)
     except:
         return '<unprintable %s object>' % type(value).__name__
 
@@ -508,7 +518,7 @@ class TracebackException:
 
         stype = getattr(self.exc_type, '__qualname__', self.exc_type.__name__)
         smod = u(self.exc_type.__module__)
-        if smod not in ("__main__", "builtins"):
+        if smod not in ("__main__", "builtins", "exceptions"):
             stype = smod + u('.') + stype
 
         if not issubclass(self.exc_type, SyntaxError):

@@ -12,7 +12,7 @@ import contextlib2 as contextlib
 import fixtures
 import linecache2 as linecache
 import six
-from six import text_type, u
+from six import b, text_type, u
 try:
     from six import raise_from
 except ImportError:
@@ -152,6 +152,14 @@ class SyntaxTracebackCases(testtools.TestCase):
         else:
             str_name = '.'.join([X.__module__, qualname(X)])
         self.assertEqual(err[0], "%s: %s\n" % (str_name, str_value))
+
+    def test_format_exception_only_undecodable__str__(self):
+        # This won't decode via the ascii codec.
+        X = Exception(u('\u5341').encode('shift-jis'))
+        err = traceback.format_exception_only(type(X), X)
+        self.assertEqual(len(err), 1)
+        str_value = "b'\\x8f\\\\'"
+        self.assertEqual(err[0], "Exception: %s\n" % str_value)
 
     def test_without_exception(self):
         err = traceback.format_exception_only(None, None)
@@ -619,7 +627,7 @@ class TestStack(unittest.TestCase):
                 traceback.walk_stack(None), capture_locals=True, limit=1)
         s = some_inner(3, 4)
         self.assertEqual(
-            ['  File "' + FNAME + '", line 619, '
+            ['  File "' + FNAME + '", line 627, '
              'in some_inner\n'
              '    traceback.walk_stack(None), capture_locals=True, limit=1)\n'
              '    a = 1\n'
