@@ -779,3 +779,16 @@ class TestTracebackException(unittest.TestCase):
         exc = traceback.TracebackException(Exception, e, tb)
         self.assertEqual(exc.stack[0].locals, None)
 
+    def test_syntax_no_extras(self):
+        linecache.updatecache('/foo.py', fake_module)
+        e = SyntaxError("uh oh")
+        c = test_code('/foo.py', 'method')
+        f = test_frame(c, fake_module, {'something': 1})
+        tb = test_tb(f, 6, None)
+        exc = traceback.TracebackException(SyntaxError, e, tb)
+        self.assertEqual([
+            u('Traceback (most recent call last):\n'),
+            u('  File "/foo.py", line 6, in method\n    from io import StringIO\n'),
+            u('  File "<string>", line None\n'),
+            u('SyntaxError: uh oh\n')],
+            list(exc.format()))

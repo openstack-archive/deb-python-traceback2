@@ -530,7 +530,7 @@ class TracebackException:
         lineno = str(self.lineno) or u('?')
         yield u('  File "{0}", line {1}\n').format(filename, lineno)
 
-        badline = u(self.text)
+        badline = self.text and u(self.text)
         offset = self.offset
         if badline is not None:
             yield u('    {0}\n').format(badline.strip())
