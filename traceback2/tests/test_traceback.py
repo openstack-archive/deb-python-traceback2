@@ -44,11 +44,13 @@ FNAME = __file__
 if FNAME.endswith('.pyc'):
     FNAME = FNAME[:-1]
 class FakeLoader:
+    def __init__(self, lines):
+        self._lines = lines
     def get_source(self, name):
-        return ''.join(linecache.getlines(FNAME))
+        return self._lines
 fake_module = dict(
     __name__='fred',
-    __loader__=FakeLoader()
+    __loader__=FakeLoader(''.join(linecache.getlines(FNAME)))
     )
 
 
@@ -470,7 +472,7 @@ ZeroDivisionError
     def test_syntax_error_offset_at_eol(self):
         # See #10186.
         def e():
-            raise SyntaxError('', ('', 0, 5, 'hello'))
+            raise SyntaxError('', ('', 0, 5, u('hello')))
         msg = self.get_report(e).splitlines()
         self.assertEqual(msg[-2], "        ^")
         def e():
@@ -637,7 +639,7 @@ class TestStack(unittest.TestCase):
                 traceback.walk_stack(None), capture_locals=True, limit=1)
         s = some_inner(3, 4)
         self.assertEqual(
-            ['  File "' + FNAME + '", line 637, '
+            ['  File "' + FNAME + '", line 639, '
              'in some_inner\n'
              '    traceback.walk_stack(None), capture_locals=True, limit=1)\n'
              '    a = 1\n'
@@ -790,5 +792,32 @@ class TestTracebackException(unittest.TestCase):
             u('Traceback (most recent call last):\n'),
             u('  File "/foo.py", line 6, in method\n    from io import StringIO\n'),
             u('  File "<string>", line None\n'),
+            u('SyntaxError: uh oh\n')],
+            list(exc.format()))
+
+    def test_syntax_undecoded_lines(self):
+        # If the interpreter returns bytestrings, we have to decode ourselves.
+        lines = u("1\n\u5341\n3\n")
+        fake_module = dict(
+            __name__='fred',
+            __loader__=FakeLoader(lines)
+            )
+        linecache.updatecache('/foo.py', fake_module)
+        e = SyntaxError("uh oh")
+        e.filename = '/foo.py'
+        e.lineno = 2
+        e.text = b('something wrong')
+        e.offset = 1
+        c = test_code('/foo.py', 'method')
+        f = test_frame(c, fake_module, {'something': 1})
+        tb = test_tb(f, 2, None)
+        exc = traceback.TracebackException(SyntaxError, e, tb)
+        list(exc.format_exception_only())
+        self.assertEqual([
+            u('Traceback (most recent call last):\n'),
+            u('  File "/foo.py", line 2, in method\n    \u5341\n'),
+            u('  File "/foo.py", line 2\n'),
+            u('    \u5341\n'),
+            u('    ^\n'),
             u('SyntaxError: uh oh\n')],
             list(exc.format()))

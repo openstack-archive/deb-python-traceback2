@@ -530,7 +530,19 @@ class TracebackException:
         lineno = str(self.lineno) or u('?')
         yield u('  File "{0}", line {1}\n').format(filename, lineno)
 
-        badline = self.text and u(self.text)
+        badline = None
+        if self.text is not None:
+            if type(self.text) is bytes:
+                # Not decoded - get the line via linecache which will decode
+                # for us.
+                if self.lineno:
+                    badline = linecache.getline(filename, int(lineno))
+                if not badline:
+                    # But we can't for some reason, so fallback to attempting a
+                    # u cast.
+                    badline = u(self.text)
+            else:
+                badline = self.text
         offset = self.offset
         if badline is not None:
             yield u('    {0}\n').format(badline.strip())
