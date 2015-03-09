@@ -380,7 +380,7 @@ class StackSummary(list):
         for frame in self:
             row = []
             row.append(u('  File "{0}", line {1}, in {2}\n').format(
-                frame.filename, frame.lineno, frame.name))
+                _some_str(frame.filename), frame.lineno, frame.name))
             if frame.line:
                 row.append(u('    {0}\n').format(frame.line.strip()))
             if frame.locals:
