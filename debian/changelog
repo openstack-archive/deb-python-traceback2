@@ -1,0 +1,5 @@
+python-traceback2 (1.4.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #791791)
+
+ -- Thomas Goirand <zigo@debian.org>  Tue, 21 Apr 2015 09:25:58 +0200
