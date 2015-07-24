@@ -465,6 +465,7 @@ class TracebackException:
                 _seen=_seen)
         else:
             context = None
+        self.exc_traceback = exc_traceback
         self.__cause__ = cause
         self.__context__ = context
         self.__suppress_context__ = \
@@ -590,7 +591,8 @@ class TracebackException:
                 for line in self.__context__.format(chain=chain):
                     yield line
                 yield _context_message
-        yield u('Traceback (most recent call last):\n')
+        if self.exc_traceback is not None:
+            yield u('Traceback (most recent call last):\n')
         for line in self.stack.format():
             yield line
         for line in self.format_exception_only():
