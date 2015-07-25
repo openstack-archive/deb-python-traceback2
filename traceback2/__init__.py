@@ -489,13 +489,12 @@ class TracebackException:
             self._load_lines()
 
     @classmethod
-    def from_exception(self, exc, *args, **kwargs):
+    def from_exception(cls, exc, *args, **kwargs):
         """Create a TracebackException from an exception.
         
         Only useful in Python 3 specific code.
         """
-        return TracebackException(
-            type(exc), exc, exc.__traceback__, *args, **kwargs)
+        return cls(type(exc), exc, exc.__traceback__, *args, **kwargs)
 
     def _load_lines(self):
         """Private API. force all lines in the stack to be loaded."""
