@@ -1,3 +1,11 @@
+python-traceback2 (1.4.0-2) UNRELEASED; urgency=medium
+
+  * d/control,rules: Add required BD's and enable unit test suite
+    execution.
+  * d/p/fix-encoding.patch: Skip file encoding test for Python 3.
+
+ -- James Page <james.page@ubuntu.com>  Tue, 04 Aug 2015 12:03:10 +0200
+
 python-traceback2 (1.4.0-1) unstable; urgency=medium
 
   * Initial release. (Closes: #791791)
