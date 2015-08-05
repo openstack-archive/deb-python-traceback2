@@ -903,3 +903,6 @@ class TestTracebackException(unittest.TestCase):
             u('    ^\n'),
             u('SyntaxError: uh oh\n')],
             list(exc.format()))
+
+if __name__ == '__main__':
+    unittest.main()
