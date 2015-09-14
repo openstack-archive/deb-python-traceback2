@@ -1,3 +1,9 @@
+python-traceback2 (1.4.0-2) unstable; urgency=medium
+
+  * Applied Ubuntu patch to run unit tests at build time (Closes: #795891).
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 14 Sep 2015 11:14:16 +0000
+
 python-traceback2 (1.4.0-1) unstable; urgency=medium
 
   * Initial release. (Closes: #791791)

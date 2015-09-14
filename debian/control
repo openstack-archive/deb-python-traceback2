@@ -14,8 +14,16 @@ Build-Depends: debhelper (>= 9),
                python3-setuptools,
 Build-Depends-Indep: python-contextlib2,
                      python-fixtures,
+                     python-linecache2,
+                     python-six,
                      python-testtools,
                      python-unittest2,
+                     python3-contextlib2,
+                     python3-fixtures,
+                     python3-linecache2,
+                     python3-six,
+                     python3-testtools,
+                     python3-unittest2,
 Standards-Version: 3.9.6
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-traceback2.git
 Vcs-Git: git://anonscm.debian.org/openstack/python-traceback2.git
