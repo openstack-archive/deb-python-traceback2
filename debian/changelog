@@ -1,3 +1,10 @@
+python-traceback2 (1.4.0-3) unstable; urgency=medium
+
+  * Fixed FTBFS by not running unit tests: there's no way to do it the way
+    upstream organized sources and dependencies (Closes: #799163).
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 21 Sep 2015 08:48:26 +0000
+
 python-traceback2 (1.4.0-2) unstable; urgency=medium
 
   * Applied Ubuntu patch to run unit tests at build time (Closes: #795891).
