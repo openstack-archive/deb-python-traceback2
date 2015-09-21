@@ -30,15 +30,16 @@ override_dh_clean:
 	dh_clean -O--buildsystem=python_distutils
 	rm -rf build .testrepository
 
-override_dh_auto_test:
-ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
-	@echo "===> Running tests"
-	set -ex && for i in $(PYTHONS) $(PYTHON3S) ; do \
-		PYMAJOR=`echo $$i | cut -d'.' -f1` ; \
-		echo "===> Testing with python$$i (python$$PYMAJOR)" ; \
-		PYTHONPATH=. PYTHON=python$$i python$$PYMAJOR-unit2; \
-	done
-endif
+# Disable unit tests until there's a way to do it properly.
+#override_dh_auto_test:
+#ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+#	@echo "===> Running tests"
+#	set -ex && for i in $(PYTHONS) $(PYTHON3S) ; do \
+#		PYMAJOR=`echo $$i | cut -d'.' -f1` ; \
+#		echo "===> Testing with python$$i (python$$PYMAJOR)" ; \
+#		PYTHONPATH=. PYTHON=python$$i python$$PYMAJOR-unit2; \
+#	done
+#endif
 
 
 # Commands not to run
