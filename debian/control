@@ -25,8 +25,8 @@ Build-Depends-Indep: python-contextlib2,
                      python3-testtools,
                      python3-unittest2,
 Standards-Version: 3.9.6
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-traceback2.git
-Vcs-Git: git://anonscm.debian.org/openstack/python-traceback2.git
+Vcs-Browser: https://anonscm.debian.org/cgit/openstack/python-traceback2.git/
+Vcs-Git: https://anonscm.debian.org/git/openstack/python-traceback2.git
 Homepage: https://github.com/testing-cabal/traceback2
 
 Package: python-traceback2
