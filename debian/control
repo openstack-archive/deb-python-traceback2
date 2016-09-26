@@ -25,8 +25,8 @@ Build-Depends: debhelper (>= 9),
 #                     python3-testtools,
 #                     python3-unittest2,
 Standards-Version: 3.9.6
-Vcs-Browser: https://anonscm.debian.org/cgit/openstack/python-traceback2.git/
-Vcs-Git: https://anonscm.debian.org/git/openstack/python-traceback2.git
+Vcs-Browser: https://git.openstack.org/cgit/openstack/deb-python-traceback2?h=debian%2Fnewton
+Vcs-Git: https://git.openstack.org/openstack/deb-python-traceback2 -b debian/newton
 Homepage: https://github.com/testing-cabal/traceback2
 
 Package: python-traceback2
