@@ -1,4 +1,4 @@
-python-traceback2 (1.4.0-4) UNRELEASED; urgency=medium
+python-traceback2 (1.4.0-4) unstable; urgency=medium
 
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
